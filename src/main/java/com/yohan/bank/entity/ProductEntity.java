@@ -1,4 +1,4 @@
-package com.yohan.bank.entities;
+package com.yohan.bank.entity;
 
 import com.yohan.bank.enums.AccountStatus;
 import com.yohan.bank.enums.AccountType;
@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "Accounts")
-public class ProductsEntity {
+public class ProductEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,12 +36,15 @@ public class ProductsEntity {
     @Column(nullable = false)
     private AccountStatus status;
 
+    @Column(nullable = false)
+    private Boolean isGmfExempt;
+
     @NotNull
     @Column(nullable = false)
     private BigDecimal balance;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "client_id", nullable = false, unique = true)
-    private ClientsEntity client;
+    private ClientEntity client;
 
 }

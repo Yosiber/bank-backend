@@ -1,4 +1,4 @@
-package com.yohan.bank.entities;
+package com.yohan.bank.entity;
 
 import com.yohan.bank.enums.TransactionType;
 import jakarta.persistence.*;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "Transactions")
-public class TransactionsEntity {
+public class TransactionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,20 +31,17 @@ public class TransactionsEntity {
     @Column(nullable = false)
     private BigDecimal amount;
 
-    @Column(length = 255)
-    private String description;
-
     @NotNull
     @Column(nullable = false)
     private LocalDateTime transactionDate;
 
     @ManyToOne
     @JoinColumn(name = "source_account_id")
-    private ProductsEntity sourceAccount;
+    private ProductEntity sourceAccount;
 
     @ManyToOne
     @JoinColumn(name = "destination_account_id")
-    private ProductsEntity destinationAccount;
+    private ProductEntity destinationAccount;
 
 
 }

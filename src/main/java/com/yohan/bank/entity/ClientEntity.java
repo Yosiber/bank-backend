@@ -1,5 +1,6 @@
-package com.yohan.bank.entities;
+package com.yohan.bank.entity;
 
+import com.yohan.bank.enums.IdentificationType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "clients")
-public class ClientsEntity {
+public class ClientEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +28,7 @@ public class ClientsEntity {
     @NotBlank
     @NotNull
     @Column(nullable=false)
-    private String identificationType;
+    private IdentificationType identificationType;
 
     @NotBlank
     @NotNull
