@@ -1,7 +1,5 @@
 package com.yohan.bank.dto;
 
-
-import com.yohan.bank.enums.AccountType;
 import com.yohan.bank.enums.IdentificationType;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -17,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ClientRequestDTO {
 
-    @NotBlank(message = "El tipo de identificación no puede ser un campo vacío")
+    @NotNull(message = "El tipo de identificación no puede ser un campo vacío")
     private IdentificationType identificationType;
 
     @NotBlank(message = "El número de identificación es obligatorio")
@@ -38,6 +36,6 @@ public class ClientRequestDTO {
 
     @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Past(message = "La fecha de nacimiento no corresponde al pasado")
-    private LocalDateTime dateOfBirth;
+    private LocalDate dateOfBirth;
 
 }

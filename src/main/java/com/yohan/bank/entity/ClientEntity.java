@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -25,13 +26,13 @@ public class ClientEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
+
     @NotNull
     @Column(nullable=false)
+    @Enumerated(EnumType.STRING)
     private IdentificationType identificationType;
 
     @NotBlank
-    @NotNull
     @Column(nullable = false, unique = true)
     private String identificationNumber;
 
@@ -49,13 +50,16 @@ public class ClientEntity {
 
     @NotNull
     @Column(nullable = false)
-    private LocalDateTime dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @CreatedDate
-    @NotNull
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @NotNull
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

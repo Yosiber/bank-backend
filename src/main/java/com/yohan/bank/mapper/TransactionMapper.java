@@ -9,8 +9,10 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TransactionMapper {
-    @Mapping(target = "sourceAccount.id", source = "sourceAccountId")
-    @Mapping(target = "destinationAccount.id", source = "destinationAccountId")
+
     TransactionEntity toEntity(TransactionRequestDTO dto);
+
+    @Mapping(source = "sourceAccount.id", target = "sourceAccount")
+    @Mapping(source = "destinationAccount.id", target = "destinationAccount")
     TransactionResponseDTO toResponseDto(TransactionEntity entity);
 }
