@@ -3,12 +3,13 @@ package com.yohan.bank.service.impl;
 import com.yohan.bank.dto.ClientRequestDTO;
 import com.yohan.bank.dto.ClientResponseDTO;
 import com.yohan.bank.entity.ClientEntity;
-import com.yohan.bank.exceptions.ClientNotFoundException;
-import com.yohan.bank.exceptions.DuplicateClientIdentificationException;
-import com.yohan.bank.exceptions.UnderageClientException;
+import com.yohan.bank.entity.ProductEntity;
+import com.yohan.bank.exceptions.*;
 import com.yohan.bank.mapper.ClientMapper;
 import com.yohan.bank.repository.ClientRepository;
+import com.yohan.bank.repository.ProductRepository;
 import com.yohan.bank.service.ClientService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.time.Period;
 public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
+    private final ProductRepository productRepository;
     private final ClientMapper clientMapper;
 
     @Override
@@ -32,7 +34,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public void updateClient(Long id,ClientRequestDTO clientRequestDTO) {
+    public void updateClient(Long id, ClientRequestDTO clientRequestDTO) {
         ClientEntity client = clientRepository.findById(id)
                 .orElseThrow(() -> new ClientNotFoundException(id));
 
@@ -43,24 +45,28 @@ public class ClientServiceImpl implements ClientService {
             throw new DuplicateClientIdentificationException();
         }
 
-        client.setFirstName(clientRequestDTO.getFirstName());
-        client.setLastName(clientRequestDTO.getLastName());
-        client.setDateOfBirth(clientRequestDTO.getDateOfBirth());
-        client.setEmail(clientRequestDTO.getEmail());
-        client.setIdentificationNumber(clientRequestDTO.getIdentificationNumber());
-        client.setIdentificationType(clientRequestDTO.getIdentificationType());
-        client.setUpdatedAt(LocalDateTime.now());
+        clientMapper.updateEntityFromDto(clientRequestDTO, client);
         validateAge(client.getDateOfBirth());
         clientRepository.save(client);
     }
 
+
     @Override
     public void deleteClientById(Long id) {
+
         if (!clientRepository.existsById(id)) {
             throw new ClientNotFoundException(id);
         }
+
+        boolean hasProducts = productRepository.existsByClientId(id);
+
+        if (hasProducts) {
+            throw new ClientHaveProductException(id);
+        }
+
         clientRepository.deleteById(id);
     }
+
 
     @Override
     public void validateAge(LocalDate dateOfBirth) {

@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -83,6 +84,16 @@ public class GlobalExceptionHandler  {
     @ExceptionHandler(DuplicateClientIdentificationException.class)
     public ResponseEntity<Object> handleDuplicateClientIdentificationException(DuplicateClientIdentificationException ex) {
         return buildErrorResponse(HttpStatus.CONFLICT, "Cliente existente", ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateAccountTypeException.class)
+    public ResponseEntity<Object> handleDuplicateAccountTypeException(DuplicateAccountTypeException ex) {
+        return buildErrorResponse(HttpStatus.CONFLICT, "Cuenta existente", ex.getMessage());
+    }
+
+    @ExceptionHandler(ClientHaveProductException.class)
+    public ResponseEntity<Object> handleClientHaveProductException(ClientHaveProductException ex) {
+        return buildErrorResponse(HttpStatus.CONFLICT, "Producto asociado al cliente", ex.getMessage());
     }
 
 

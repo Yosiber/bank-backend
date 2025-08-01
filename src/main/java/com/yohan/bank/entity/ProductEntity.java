@@ -9,15 +9,20 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "Accounts")
+@Table(name = "accounts", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"client_id", "account_type"})
+})
 public class ProductEntity {
 
     @Id
@@ -25,15 +30,14 @@ public class ProductEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "account_type", nullable = false)
     private AccountType accountType;
 
-    @NotBlank
-    @Column(nullable = false, unique = true)
+    @Column(name = "account_number", nullable = false)
     private String accountNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column()
     private AccountStatus status;
 
     @Column(nullable = false)
@@ -43,8 +47,25 @@ public class ProductEntity {
     @Column(nullable = false)
     private BigDecimal balance;
 
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
     @ManyToOne(optional = false)
-    @JoinColumn(name = "client_id", nullable = false, unique = true)
+    @JoinColumn(name = "client_id", nullable = false)
     private ClientEntity client;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
 }

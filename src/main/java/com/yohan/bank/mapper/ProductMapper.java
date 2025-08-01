@@ -9,7 +9,10 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ProductMapper {
+
     @Mapping(target = "client.id", source = "clientId")
     ProductEntity toEntity(ProductRequestDTO dto);
+
+    @Mapping(target = "clientId", source = "client.id")
     ProductResponseDTO toResponseDto(ProductEntity entity);
 }

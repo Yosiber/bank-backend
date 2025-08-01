@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class ProductRequestDTO {
 
-    @NotBlank(message = "El tipo de cuenta es obligatorio")
+    @NotNull(message = "El tipo de cuenta es obligatorio")
     private AccountType accountType;
 
     @Pattern(regexp = "^(33|53)\\d{8}$", message = "El número de cuenta debe tener 10 dígitos y empezar con 33 o 53")
@@ -30,7 +30,7 @@ public class ProductRequestDTO {
     @NotNull(message = "Debe especificar si la cuenta es exenta de GMF")
     private Boolean isGmfExempt;
 
-    @NotBlank(message = "La id del cliente no puede ser un campo vacío")
+    @NotNull(message = "La id del cliente no puede ser nula")
     private Long clientId;
 
 }

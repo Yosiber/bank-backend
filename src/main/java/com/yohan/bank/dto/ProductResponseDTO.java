@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -19,6 +20,7 @@ public class ProductResponseDTO {
     private String accountNumber;
     private AccountStatus status;
     private BigDecimal balance;
-    private String clientName;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Long clientId;
 }
