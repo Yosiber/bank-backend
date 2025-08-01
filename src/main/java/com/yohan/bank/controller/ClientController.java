@@ -7,10 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/clients")
@@ -22,5 +19,17 @@ public class ClientController {
     public ResponseEntity<ClientResponseDTO> createClient(@RequestBody @Valid ClientRequestDTO requestDTO) {
         ClientResponseDTO response = clientService.createClient(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteClient(@PathVariable @Valid Long id) {
+        clientService.deleteClientById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Void> updateClient(@PathVariable Long id, @RequestBody @Valid ClientRequestDTO clientDTO) {
+        clientService.updateClient(id, clientDTO);
+        return ResponseEntity.noContent().build();
     }
 }

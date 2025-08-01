@@ -15,14 +15,19 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler  {
 
+    private static final String TIMESTAMP = "timestamp";
+    private static final String STATUS = "status";
+    private static final String ERROR = "error";
+    private static final String MESSAGE = "message";
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
 
 
         Map<String, Object> errors = new LinkedHashMap<>();
-        errors.put("timestamp", LocalDateTime.now());
-        errors.put("status", HttpStatus.BAD_REQUEST.value());
-        errors.put("error", "Bad Request");
+        errors.put(TIMESTAMP, LocalDateTime.now());
+        errors.put(STATUS, HttpStatus.BAD_REQUEST.value());
+        errors.put(ERROR, "Bad Request");
 
         List<Map<String, String>> fieldErrors = ex.getBindingResult()
                 .getFieldErrors()
@@ -30,10 +35,10 @@ public class GlobalExceptionHandler  {
                 .map(error -> {
                     Map<String, String> err = new HashMap<>();
                     err.put("field", error.getField());
-                    err.put("message", error.getDefaultMessage());
+                    err.put(MESSAGE, error.getDefaultMessage());
                     return err;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         errors.put("errors", fieldErrors);
 
@@ -41,7 +46,7 @@ public class GlobalExceptionHandler  {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         Throwable rootCause = ex.getCause();
         String message;
 
@@ -56,11 +61,38 @@ public class GlobalExceptionHandler  {
         }
 
         Map<String, Object> error = new LinkedHashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("status", HttpStatus.BAD_REQUEST.value());
-        error.put("error", "Error de lectura del cuerpo JSON");
-        error.put("message", message);
+        error.put(TIMESTAMP, LocalDateTime.now());
+        error.put(STATUS, HttpStatus.BAD_REQUEST.value());
+        error.put(ERROR, "Error de lectura del cuerpo JSON");
+        error.put(MESSAGE, message);
 
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(ClientNotFoundException.class)
+    public ResponseEntity<Object>  handleClientNotFoundException(ClientNotFoundException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Cliente no encontrado", ex.getMessage());
+    }
+
+    @ExceptionHandler(UnderageClientException.class)
+    public ResponseEntity<Object> handleUnderageClientException(UnderageClientException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Edad inválida", ex.getMessage());
+
+    }
+
+    @ExceptionHandler(DuplicateClientIdentificationException.class)
+    public ResponseEntity<Object> handleDuplicateClientIdentificationException(DuplicateClientIdentificationException ex) {
+        return buildErrorResponse(HttpStatus.CONFLICT, "Cliente existente", ex.getMessage());
+    }
+
+
+    private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String error, String message) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, status.value());
+        body.put(ERROR, error);
+        body.put(MESSAGE, message);
+        return new ResponseEntity<>(body, status);
+    }
+
 }
