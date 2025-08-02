@@ -1,7 +1,5 @@
 package com.yohan.bank.exceptions;
 
-import java.time.LocalDate;
-
 public class UnderageClientException extends RuntimeException {
 
     public UnderageClientException() {

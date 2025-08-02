@@ -1,6 +1,5 @@
 package com.yohan.bank.dto;
 
-import com.yohan.bank.entity.ProductEntity;
 import com.yohan.bank.enums.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

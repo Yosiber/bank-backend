@@ -33,11 +33,11 @@ public class ProductEntity {
     @Column(name = "account_type", nullable = false)
     private AccountType accountType;
 
-    @Column(name = "account_number", nullable = false)
+    @Column(name = "account_number", nullable = false, unique = true)
     private String accountNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column()
+    @Column(nullable = false)
     private AccountStatus status;
 
     @Column(nullable = false)
@@ -48,9 +48,11 @@ public class ProductEntity {
     private BigDecimal balance;
 
     @CreatedDate
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @ManyToOne(optional = false)

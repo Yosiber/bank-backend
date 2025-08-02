@@ -8,7 +8,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -96,6 +95,15 @@ public class GlobalExceptionHandler  {
         return buildErrorResponse(HttpStatus.CONFLICT, "Producto asociado al cliente", ex.getMessage());
     }
 
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<Object> handleProductNotFoundException(ProductNotFoundException ex) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Cuenta no encontrado", ex.getMessage());
+    }
+
+    @ExceptionHandler(AccountCancellationNotAllowedException.class)
+    public ResponseEntity<Object> handleAccountCancellationNotAllowedException(AccountCancellationNotAllowedException ex) {
+        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Cuenta no encontrada", ex.getMessage());
+    }
 
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String error, String message) {
         Map<String, Object> body = new LinkedHashMap<>();
