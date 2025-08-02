@@ -65,8 +65,8 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
     }
 
-    @Override
-    public void validateClientId(Long clientId) {
+
+    private void validateClientId(Long clientId) {
         if (clientId == null || !clientRepository.existsById(clientId)) {
             throw new ClientNotFoundException(clientId);
         }

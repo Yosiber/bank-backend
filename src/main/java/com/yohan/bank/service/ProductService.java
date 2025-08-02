@@ -8,5 +8,4 @@ public interface ProductService {
 
     ProductResponseDTO createProductForClient(ProductRequestDTO productRequestDTO);
     void changeAccountStatus (Long productId, AccountStatus newStatus);
-    void validateClientId (Long clientId);
 }

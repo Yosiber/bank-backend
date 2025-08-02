@@ -1,5 +1,6 @@
 package com.yohan.bank.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.yohan.bank.enums.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,5 +20,8 @@ public class TransactionResponseDTO {
     private BigDecimal amount;
     private Long sourceAccount;
     private Long destinationAccount;
+    private Long productId;
     private LocalDateTime transactionDate;
+
+
 }

@@ -36,12 +36,22 @@ public class TransactionEntity {
     private LocalDateTime transactionDate;
 
     @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private ProductEntity product;
+
+    @ManyToOne
     @JoinColumn(name = "source_account_id")
     private ProductEntity sourceAccount;
 
     @ManyToOne
     @JoinColumn(name = "destination_account_id")
     private ProductEntity destinationAccount;
+
+    @PrePersist
+    public void prePersist() {
+        transactionDate = LocalDateTime.now();
+    }
+
 
 
 }

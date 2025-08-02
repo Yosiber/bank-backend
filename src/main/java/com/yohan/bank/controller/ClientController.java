@@ -28,7 +28,10 @@ public class ClientController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Void> updateClient(@PathVariable Long id, @RequestBody @Valid ClientRequestDTO clientDTO) {
+    public ResponseEntity<Void> updateClient(
+            @PathVariable Long id,
+            @RequestBody @Valid ClientRequestDTO clientDTO) {
+
         clientService.updateClient(id, clientDTO);
         return ResponseEntity.noContent().build();
     }

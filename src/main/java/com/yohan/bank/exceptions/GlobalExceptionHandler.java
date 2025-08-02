@@ -71,13 +71,12 @@ public class GlobalExceptionHandler  {
 
     @ExceptionHandler(ClientNotFoundException.class)
     public ResponseEntity<Object>  handleClientNotFoundException(ClientNotFoundException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Cliente no encontrado", ex.getMessage());
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Cliente no encontrado", ex.getMessage());
     }
 
     @ExceptionHandler(UnderageClientException.class)
     public ResponseEntity<Object> handleUnderageClientException(UnderageClientException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Edad inválida", ex.getMessage());
-
+        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Edad inválida", ex.getMessage());
     }
 
     @ExceptionHandler(DuplicateClientIdentificationException.class)
@@ -103,6 +102,11 @@ public class GlobalExceptionHandler  {
     @ExceptionHandler(AccountCancellationNotAllowedException.class)
     public ResponseEntity<Object> handleAccountCancellationNotAllowedException(AccountCancellationNotAllowedException ex) {
         return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Cuenta no encontrada", ex.getMessage());
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Object> handleUnprocessableEntityException(InsufficientBalanceException ex) {
+        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), ex.getMessage());
     }
 
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String error, String message) {
