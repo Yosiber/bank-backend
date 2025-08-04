@@ -19,9 +19,6 @@ public class ProductRequestDTO {
     @NotNull(message = "El tipo de cuenta es obligatorio")
     private AccountType accountType;
 
-    @DecimalMin(value = "0.0", message = "El saldo no puede ser menor a 0")
-    private BigDecimal balance;
-
     @NotNull(message = "Debe especificar si la cuenta es exenta de GMF")
     private Boolean isGmfExempt;
 

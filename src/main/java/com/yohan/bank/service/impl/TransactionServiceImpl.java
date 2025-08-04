@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,9 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionMapper transactionMapper;
     private final ProductRepository productRepository;
 
+    private static final BigDecimal GMF_RATE = new BigDecimal("0.004");
+
+
     @Override
     public TransactionResponseDTO createDepositOrWithdraw(Long accountId, DepositWithdrawRequestDTO request) {
 
@@ -32,12 +37,19 @@ public class TransactionServiceImpl implements TransactionService {
 
         BigDecimal newBalance = getBigDecimal(request, product);
 
+        if (request.getTransactionType() == TransactionType.WITHDRAW &&
+                !Boolean.TRUE.equals(product.getIsGmfExempt()) &&
+                request.getAmount().compareTo(BigDecimal.valueOf(1000)) >= 0) {
+
+            BigDecimal gmfAmount = calculateGmf(request.getAmount());
+            applyGmf(product, gmfAmount);
+        }
+
         TransactionEntity transaction = transactionMapper.toEntity(request);
         transaction.setProduct(product);
 
         product.setBalance(newBalance);
         productRepository.save(product);
-
         TransactionEntity newTransaction = transactionRepository.save(transaction);
 
         return transactionMapper.toResponseDto(newTransaction);
@@ -60,9 +72,21 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new ProductNotFoundException(destinationId));
 
         BigDecimal amount = request.getAmount();
+        BigDecimal gmfAmount = BigDecimal.ZERO;
 
-        if (sourceAccount.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientBalanceException();
+        if (!Boolean.TRUE.equals(sourceAccount.getIsGmfExempt()) &&
+                amount.compareTo(BigDecimal.valueOf(1000)) >= 0) {
+            gmfAmount = calculateGmf(amount);
+        }
+
+        BigDecimal totalToDeduct = amount.add(gmfAmount);
+
+        if (sourceAccount.getBalance().compareTo(totalToDeduct) < 0) {
+            throw new InsufficientBalanceException("Saldo insuficiente para cubrir la transferencia y el GMF");
+        }
+
+        if (gmfAmount.compareTo(BigDecimal.ZERO) > 0) {
+            applyGmf(sourceAccount, gmfAmount);
         }
 
         sourceAccount.setBalance(sourceAccount.getBalance().subtract(amount));
@@ -77,6 +101,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .transactionType(TransactionType.WITHDRAW)
                 .sourceAccount(sourceAccount)
                 .destinationAccount(destinationAccount)
+                .transactionDate(LocalDateTime.now())
                 .build();
 
         TransactionEntity creditTx = TransactionEntity.builder()
@@ -85,6 +110,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .transactionType(TransactionType.DEPOSIT)
                 .sourceAccount(sourceAccount)
                 .destinationAccount(destinationAccount)
+                .transactionDate(LocalDateTime.now())
                 .build();
 
         transactionRepository.save(debitTx);
@@ -96,19 +122,54 @@ public class TransactionServiceImpl implements TransactionService {
         );
     }
 
-    private static BigDecimal getBigDecimal(DepositWithdrawRequestDTO request, ProductEntity product) {
+
+    private BigDecimal calculateGmf(BigDecimal amount) {
+        return amount.multiply(GMF_RATE).setScale(2, RoundingMode.HALF_UP);
+    }
+
+
+    private void applyGmf(ProductEntity account, BigDecimal gmfAmount) {
+        account.setBalance(account.getBalance().subtract(gmfAmount));
+        productRepository.save(account);
+
+        TransactionEntity gmfTransaction = TransactionEntity.builder()
+                .amount(gmfAmount)
+                .product(account)
+                .transactionType(TransactionType.GMF)
+                .transactionDate(LocalDateTime.now())
+                .build();
+
+        transactionRepository.save(gmfTransaction);
+    }
+
+    private  BigDecimal getBigDecimal(DepositWithdrawRequestDTO request, ProductEntity product) {
         BigDecimal newBalance = product.getBalance();
         BigDecimal amount = request.getAmount();
 
-        if (request.getTransactionType().equals(TransactionType.DEPOSIT)) {
-            newBalance = newBalance.add(amount);
-        } else if (request.getTransactionType().equals(TransactionType.WITHDRAW)) {
-            if (product.getBalance().compareTo(amount) < 0) {
-                throw new InsufficientBalanceException();
+        switch (request.getTransactionType()) {
+            case TRANSFER -> throw new UnsupportedOperationException("Las transferencias no están permitidas en esta dirección");
+
+            case DEPOSIT -> newBalance = newBalance.add(amount);
+
+            case WITHDRAW -> {
+                BigDecimal gmf = BigDecimal.ZERO;
+
+                if (!Boolean.TRUE.equals(product.getIsGmfExempt()) && amount.compareTo(BigDecimal.valueOf(1000)) >= 0) {
+                    gmf = calculateGmf(amount);
+                }
+
+                BigDecimal totalRequired = amount.add(gmf);
+                if (product.getBalance().compareTo(totalRequired) < 0) {
+                    throw new InsufficientBalanceException("Saldo insuficiente para cubrir el retiro y el GMF");
+                }
+
+                newBalance = newBalance.subtract(amount);
             }
-            newBalance = newBalance.subtract(amount);
+
+            case GMF -> throw new UnsupportedOperationException("GMF no es permitido aquí");
         }
 
         return newBalance;
     }
+
 }

@@ -53,9 +53,11 @@ public class ClientEntity {
     private LocalDate dateOfBirth;
 
     @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist

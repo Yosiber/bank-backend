@@ -45,7 +45,8 @@ public class ProductEntity {
 
     @NotNull
     @Column(nullable = false)
-    private BigDecimal balance;
+    @Builder.Default
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @CreatedDate
     @Column(nullable = false)

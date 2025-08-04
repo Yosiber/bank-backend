@@ -68,8 +68,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
 
-    @Override
-    public void validateAge(LocalDate dateOfBirth) {
+    private void validateAge(LocalDate dateOfBirth) {
 
         LocalDate today = LocalDate.now();
         Period age = Period.between(dateOfBirth, today);

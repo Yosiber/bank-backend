@@ -11,5 +11,4 @@ public interface ClientService {
     ClientResponseDTO createClient(ClientRequestDTO clientRequestDTO);
     void updateClient(Long id, ClientRequestDTO clientRequestDTO);
     void deleteClientById(Long id);
-    void validateAge(LocalDate dateOfBirth);
 }
