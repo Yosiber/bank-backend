@@ -72,7 +72,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private String generateAccountNumber(AccountType type) {
+    public String generateAccountNumber(AccountType type) {
         String prefix = type == AccountType.SAVINGS ? "53" : "33";
         String suffix;
         String fullNumber;

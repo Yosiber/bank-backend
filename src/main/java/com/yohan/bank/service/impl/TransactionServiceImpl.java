@@ -3,8 +3,10 @@ package com.yohan.bank.service.impl;
 import com.yohan.bank.dto.*;
 import com.yohan.bank.entity.ProductEntity;
 import com.yohan.bank.entity.TransactionEntity;
+import com.yohan.bank.enums.AccountStatus;
 import com.yohan.bank.enums.TransactionType;
 import com.yohan.bank.exceptions.CannotTransferToSameAccountException;
+import com.yohan.bank.exceptions.InactiveOrCancelledAccountException;
 import com.yohan.bank.exceptions.InsufficientBalanceException;
 import com.yohan.bank.exceptions.ProductNotFoundException;
 import com.yohan.bank.mapper.TransactionMapper;
@@ -28,14 +30,19 @@ public class TransactionServiceImpl implements TransactionService {
 
     private static final BigDecimal GMF_RATE = new BigDecimal("0.004");
 
-
     @Override
     public TransactionResponseDTO createDepositOrWithdraw(Long accountId, DepositWithdrawRequestDTO request) {
 
         ProductEntity product = productRepository.findById(accountId)
                 .orElseThrow(() -> new ProductNotFoundException(accountId));
 
-        BigDecimal newBalance = getBigDecimal(request, product);
+        BigDecimal newBalance;
+
+        if(product.getStatus() == AccountStatus.ACTIVE) {
+            newBalance = getBigDecimal(request, product);
+        } else {
+            throw new InactiveOrCancelledAccountException(accountId);
+        }
 
         if (request.getTransactionType() == TransactionType.WITHDRAW &&
                 !Boolean.TRUE.equals(product.getIsGmfExempt()) &&
@@ -71,6 +78,11 @@ public class TransactionServiceImpl implements TransactionService {
         ProductEntity destinationAccount = productRepository.findById(destinationId)
                 .orElseThrow(() -> new ProductNotFoundException(destinationId));
 
+        if (!AccountStatus.ACTIVE.equals(sourceAccount.getStatus()) ||
+                !AccountStatus.ACTIVE.equals(destinationAccount.getStatus())) {
+            throw new InactiveOrCancelledAccountException(sourceId);
+        }
+
         BigDecimal amount = request.getAmount();
         BigDecimal gmfAmount = BigDecimal.ZERO;
 
@@ -80,17 +92,22 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         BigDecimal totalToDeduct = amount.add(gmfAmount);
-
         if (sourceAccount.getBalance().compareTo(totalToDeduct) < 0) {
             throw new InsufficientBalanceException("Saldo insuficiente para cubrir la transferencia y el GMF");
         }
 
-        if (gmfAmount.compareTo(BigDecimal.ZERO) > 0) {
-            applyGmf(sourceAccount, gmfAmount);
-        }
-
-        sourceAccount.setBalance(sourceAccount.getBalance().subtract(amount));
+        sourceAccount.setBalance(sourceAccount.getBalance().subtract(totalToDeduct));
         destinationAccount.setBalance(destinationAccount.getBalance().add(amount));
+
+        if (gmfAmount.compareTo(BigDecimal.ZERO) > 0) {
+            TransactionEntity gmfTransaction = TransactionEntity.builder()
+                    .amount(gmfAmount)
+                    .product(sourceAccount)
+                    .transactionType(TransactionType.GMF)
+                    .transactionDate(LocalDateTime.now())
+                    .build();
+            transactionRepository.save(gmfTransaction);
+        }
 
         productRepository.save(sourceAccount);
         productRepository.save(destinationAccount);
@@ -121,6 +138,7 @@ public class TransactionServiceImpl implements TransactionService {
                 transactionMapper.toResponseDto(creditTx)
         );
     }
+
 
 
     private BigDecimal calculateGmf(BigDecimal amount) {

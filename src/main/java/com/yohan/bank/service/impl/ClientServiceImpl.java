@@ -3,18 +3,15 @@ package com.yohan.bank.service.impl;
 import com.yohan.bank.dto.ClientRequestDTO;
 import com.yohan.bank.dto.ClientResponseDTO;
 import com.yohan.bank.entity.ClientEntity;
-import com.yohan.bank.entity.ProductEntity;
 import com.yohan.bank.exceptions.*;
 import com.yohan.bank.mapper.ClientMapper;
 import com.yohan.bank.repository.ClientRepository;
 import com.yohan.bank.repository.ProductRepository;
 import com.yohan.bank.service.ClientService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 
 @Service

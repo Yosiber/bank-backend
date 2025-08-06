@@ -114,6 +114,11 @@ public class GlobalExceptionHandler  {
         return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), ex.getMessage());
     }
 
+    @ExceptionHandler(InactiveOrCancelledAccountException.class)
+    public ResponseEntity<Object> handleInactiveOrCancelledAccountException(InactiveOrCancelledAccountException ex) {
+        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), ex.getMessage());
+    }
+
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String error, String message) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put(TIMESTAMP, LocalDateTime.now());

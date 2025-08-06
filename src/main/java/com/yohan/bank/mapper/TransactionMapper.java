@@ -12,7 +12,7 @@ public interface TransactionMapper {
 
     TransactionEntity toEntity(TransactionRequestDTO dto);
 
-    @Mapping(source = "transactionType", target = "type")
+    @Mapping(source = "transactionType", target = "transactionType")
     @Mapping(source = "product.id", target = "productId")
     @Mapping(source = "sourceAccount.id", target = "sourceAccount")
     @Mapping(source = "destinationAccount.id", target = "destinationAccount")

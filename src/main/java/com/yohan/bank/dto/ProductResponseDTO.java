@@ -20,6 +20,7 @@ public class ProductResponseDTO {
     private String accountNumber;
     private AccountStatus status;
     private BigDecimal balance;
+    private Boolean isGmfExempt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long clientId;
