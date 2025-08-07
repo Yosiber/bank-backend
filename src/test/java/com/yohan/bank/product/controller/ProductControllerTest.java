@@ -2,14 +2,22 @@ package com.yohan.bank.product.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yohan.bank.controller.ProductController;
+import com.yohan.bank.dto.ClientResponseDTO;
 import com.yohan.bank.dto.ProductRequestDTO;
 import com.yohan.bank.dto.ProductResponseDTO;
+import com.yohan.bank.entity.ClientEntity;
+import com.yohan.bank.entity.ProductEntity;
 import com.yohan.bank.enums.AccountStatus;
 import com.yohan.bank.enums.AccountType;
+import com.yohan.bank.exceptions.ClientNotFoundException;
+import com.yohan.bank.mapper.ProductMapper;
+import com.yohan.bank.repository.ProductRepository;
 import com.yohan.bank.service.ProductService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.MediaType;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,11 +26,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
 class ProductControllerTest {
@@ -33,10 +41,17 @@ class ProductControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Mock
+    private ProductMapper productMapper;
+
+    @Mock
+    private ProductRepository productRepository;
+
     @MockitoBean
     private ProductService productService;
 
     private ProductRequestDTO request;
+    private ProductEntity product;
     private ProductResponseDTO response;
 
     @BeforeEach
@@ -57,6 +72,44 @@ class ProductControllerTest {
         response.setCreatedAt(LocalDateTime.now());
         response.setUpdatedAt(LocalDateTime.now());
     }
+
+    @Test
+    void getAllProducts_shouldReturnListOfProducts() throws Exception {
+        List<ProductResponseDTO> responseList = List.of(response);
+
+        Mockito.when(productService.getAllProducts()).thenReturn(responseList);
+
+        mockMvc.perform(get("/accounts"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(String.valueOf(MediaType.APPLICATION_JSON)))
+                .andExpect(jsonPath("$.size()").value(1))
+                .andExpect(jsonPath("$[0].id").value(response.getId()))
+                .andExpect(jsonPath("$[0].accountNumber").value(response.getAccountNumber()))
+                .andExpect(jsonPath("$[0].clientId").value(response.getClientId()))
+                .andExpect(jsonPath("$[0].accountType").value(response.getAccountType().toString()))
+                .andExpect(jsonPath("$[0].balance").value(response.getBalance()));
+
+        Mockito.verify(productService).getAllProducts();
+    }
+
+    @Test
+    void getProductById_shouldReturnProduct_whenIdIsValid() throws Exception {
+        Long id = 1L;
+        Mockito.when(productService.getProductsById(id)).thenReturn(response);
+
+        mockMvc.perform(get("/accounts/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(String.valueOf(MediaType.APPLICATION_JSON)))
+                .andExpect(jsonPath("$.id").value(response.getId()))
+                .andExpect(jsonPath("$.accountNumber").value(response.getAccountNumber()))
+                .andExpect(jsonPath("$.clientId").value(response.getClientId()))
+                .andExpect(jsonPath("$.accountType").value(response.getAccountType().toString()))
+                .andExpect(jsonPath("$.balance").value(response.getBalance()));
+
+        Mockito.verify(productService).getProductsById(id);
+    }
+
+
 
     @Test
     void createProductForClient_shouldReturnCreated() throws Exception {

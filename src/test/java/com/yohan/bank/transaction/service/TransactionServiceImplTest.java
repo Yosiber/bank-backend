@@ -8,6 +8,7 @@ import com.yohan.bank.enums.AccountStatus;
 import com.yohan.bank.enums.AccountType;
 import com.yohan.bank.enums.TransactionType;
 import com.yohan.bank.exceptions.InactiveOrCancelledAccountException;
+import com.yohan.bank.exceptions.TransactionNotFoundException;
 import com.yohan.bank.mapper.TransactionMapper;
 import com.yohan.bank.repository.ProductRepository;
 import com.yohan.bank.repository.TransactionRepository;
@@ -22,6 +23,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,9 +45,12 @@ class TransactionServiceImplTest {
     private DepositWithdrawRequestDTO request;
     private TransactionEntity transaction;
     private TransactionResponseDTO response;
+    private Long id;
 
     @BeforeEach
     void setUp() {
+        id = 1L;
+
         product = new ProductEntity();
         product.setId(1L);
         product.setAccountNumber("3312345678");
@@ -71,6 +76,50 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    void getAllTransaction_shouldReturnListOfTransactionResponseDTOs() {
+        List<TransactionEntity> transactions = List.of(transaction);
+        Mockito.when(transactionRepository.findAll()).thenReturn(transactions);
+        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(response);
+
+        List<TransactionResponseDTO> result = transactionService.getAllTransaction();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(response, result.getFirst());
+
+        Mockito.verify(transactionRepository).findAll();
+        Mockito.verify(transactionMapper).toResponseDto(transaction);
+    }
+
+    @Test
+    void getTransactionById_shouldReturnTransactionResponseDTO_whenClientExists() {
+
+        Mockito.when(transactionRepository.findById(id)).thenReturn(Optional.of(transaction));
+        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(response);
+
+
+        TransactionResponseDTO result = transactionService.getTransactionById(id);
+
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(response, result);
+
+        Mockito.verify(transactionRepository).findById(id);
+        Mockito.verify(transactionMapper).toResponseDto(transaction);
+    }
+
+    @Test
+    void getTransactionById_shouldThrowException_whenTransactionNotFound() {
+
+        Mockito.when(transactionRepository.findById(id)).thenReturn(Optional.empty());
+
+
+        Assertions.assertThrows(TransactionNotFoundException.class, () -> transactionService.getTransactionById(id));
+        Mockito.verify(transactionRepository).findById(id);
+        Mockito.verifyNoInteractions(transactionMapper);
+    }
+
+    @Test
     void createDeposit_shouldUpdateBalanceAndReturnTransaction() {
         request = new DepositWithdrawRequestDTO();
         request.setTransactionType(TransactionType.DEPOSIT);
@@ -80,17 +129,13 @@ class TransactionServiceImplTest {
         product.setIsGmfExempt(true);
         product.setStatus(AccountStatus.ACTIVE);
 
-        TransactionEntity transactionEntityToSave = new TransactionEntity();
-        transactionEntityToSave.setProduct(product);
-
-        TransactionResponseDTO responseDTO = new TransactionResponseDTO();
         response.setAmount(BigDecimal.valueOf(5000));
         response.setTransactionType(TransactionType.DEPOSIT);
 
         Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        Mockito.when(transactionMapper.toEntity(request)).thenReturn(transactionEntityToSave);
-        Mockito.when(transactionRepository.save(Mockito.any())).thenReturn(transactionEntityToSave);
-        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(responseDTO);
+        Mockito.when(transactionMapper.toEntity(request)).thenReturn(transaction);
+        Mockito.when(transactionRepository.save(Mockito.any())).thenReturn(transaction);
+        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(response);
 
         TransactionResponseDTO result = transactionService.createDepositOrWithdraw(1L, request);
 
@@ -103,7 +148,6 @@ class TransactionServiceImplTest {
 
     @Test
     void createWithdraw_shouldApplyGmfAndUpdateBalance() {
-        request = new DepositWithdrawRequestDTO();
         request.setTransactionType(TransactionType.WITHDRAW);
         request.setAmount(BigDecimal.valueOf(2000));
 
@@ -111,17 +155,16 @@ class TransactionServiceImplTest {
         product.setIsGmfExempt(false);
         product.setStatus(AccountStatus.ACTIVE);
 
-        TransactionEntity transactionEntityToSave = new TransactionEntity();
-        transactionEntityToSave.setProduct(product);
+        transaction.setTransactionType(TransactionType.WITHDRAW);
+        transaction.setAmount(BigDecimal.valueOf(1000)); // Se espera que reste GMF
 
-        TransactionResponseDTO responseDTO = new TransactionResponseDTO();
         response.setTransactionType(TransactionType.WITHDRAW);
         response.setAmount(BigDecimal.valueOf(1000));
 
         Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        Mockito.when(transactionMapper.toEntity(request)).thenReturn(transactionEntityToSave);
-        Mockito.when(transactionRepository.save(Mockito.any())).thenReturn(transactionEntityToSave);
-        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(responseDTO);
+        Mockito.when(transactionMapper.toEntity(request)).thenReturn(transaction);
+        Mockito.when(transactionRepository.save(Mockito.any())).thenReturn(transaction);
+        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(response);
 
         TransactionResponseDTO result = transactionService.createDepositOrWithdraw(1L, request);
 
@@ -147,7 +190,6 @@ class TransactionServiceImplTest {
 
     @Test
     void createWithdraw_shouldNotApplyGmf_whenAmountIsLessThan1000() {
-        request = new DepositWithdrawRequestDTO();
         request.setTransactionType(TransactionType.WITHDRAW);
         request.setAmount(BigDecimal.valueOf(500));
 
@@ -155,22 +197,20 @@ class TransactionServiceImplTest {
         product.setIsGmfExempt(false);
         product.setStatus(AccountStatus.ACTIVE);
 
-        TransactionEntity transactionEntityToSave = new TransactionEntity();
-        transaction.setProduct(product);
+        transaction.setTransactionType(TransactionType.WITHDRAW);
+        transaction.setAmount(BigDecimal.valueOf(500));
 
-        TransactionResponseDTO responseDTO = new TransactionResponseDTO();
         response.setTransactionType(TransactionType.WITHDRAW);
         response.setAmount(BigDecimal.valueOf(500));
 
         Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        Mockito.when(transactionMapper.toEntity(request)).thenReturn(transactionEntityToSave);
-        Mockito.when(transactionRepository.save(Mockito.any())).thenReturn(transactionEntityToSave);
-        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(responseDTO);
+        Mockito.when(transactionMapper.toEntity(request)).thenReturn(transaction);
+        Mockito.when(transactionRepository.save(Mockito.any())).thenReturn(transaction);
+        Mockito.when(transactionMapper.toResponseDto(transaction)).thenReturn(response);
 
         TransactionResponseDTO result = transactionService.createDepositOrWithdraw(1L, request);
 
         Mockito.verify(productRepository, Mockito.times(1)).save(Mockito.any());
-
         Assertions.assertEquals(0, result.getAmount().compareTo(BigDecimal.valueOf(500)));
     }
 }

@@ -3,8 +3,11 @@ package com.yohan.bank.controller;
 import com.yohan.bank.dto.*;
 import com.yohan.bank.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/transaction")
@@ -12,6 +15,18 @@ import org.springframework.web.bind.annotation.*;
 public class TransactionController {
 
     private final TransactionService transactionService;
+
+    @GetMapping
+    public ResponseEntity<List<TransactionResponseDTO>> getAllTransactions() {
+        List<TransactionResponseDTO> transactionResponseDTO = transactionService.getAllTransaction();
+        return ResponseEntity.status(HttpStatus.OK).body(transactionResponseDTO);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TransactionResponseDTO> getTransactionById(@PathVariable Long id) {
+        TransactionResponseDTO transactionResponseDTO = transactionService.getTransactionById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(transactionResponseDTO);
+    }
 
     @PostMapping("/deposit-withdraw/{accountId}")
     public ResponseEntity<TransactionResponseDTO> createDepositOrWithdraw(

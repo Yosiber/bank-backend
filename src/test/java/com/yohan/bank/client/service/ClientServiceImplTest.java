@@ -19,6 +19,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,6 +71,50 @@ class ClientServiceImplTest {
         existingEntity.setLastName("Name");
         existingEntity.setDateOfBirth(LocalDate.of(1995, 1, 1));
         existingEntity.setIdentificationNumber("9999999999");
+    }
+
+    @Test
+    void getAllClients_shouldReturnListOfClientResponseDTOs() {
+        List<ClientEntity> clients = List.of(client);
+        Mockito.when(clientRepository.findAll()).thenReturn(clients);
+        Mockito.when(clientMapper.toResponseDto(client)).thenReturn(responseDTO);
+
+        List<ClientResponseDTO> result = clientService.getAllClients();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(responseDTO, result.get(0));
+
+        Mockito.verify(clientRepository).findAll();
+        Mockito.verify(clientMapper).toResponseDto(client);
+    }
+
+    @Test
+    void getClientsById_shouldReturnClientResponseDTO_whenClientExists() {
+
+        Mockito.when(clientRepository.findById(id)).thenReturn(Optional.of(client));
+        Mockito.when(clientMapper.toResponseDto(client)).thenReturn(responseDTO);
+
+
+        ClientResponseDTO result = clientService.getClientsById(id);
+
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(responseDTO, result);
+
+        Mockito.verify(clientRepository).findById(id);
+        Mockito.verify(clientMapper).toResponseDto(client);
+    }
+
+    @Test
+    void getClientsById_shouldThrowException_whenClientNotFound() {
+
+        Mockito.when(clientRepository.findById(id)).thenReturn(Optional.empty());
+
+
+        Assertions.assertThrows(ClientNotFoundException.class, () -> clientService.getClientsById(id));
+        Mockito.verify(clientRepository).findById(id);
+        Mockito.verifyNoInteractions(clientMapper);
     }
 
     @Test

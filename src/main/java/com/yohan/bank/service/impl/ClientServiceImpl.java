@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,22 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
     private final ProductRepository productRepository;
     private final ClientMapper clientMapper;
+
+    @Override
+    public List<ClientResponseDTO> getAllClients() {
+        List<ClientEntity> clients = clientRepository.findAll();
+        return clients.stream()
+                .map(clientMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    public ClientResponseDTO getClientsById(Long id) {
+        ClientEntity client = clientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException(id));
+
+        return clientMapper.toResponseDto(client);
+    }
 
     @Override
     public ClientResponseDTO createClient(ClientRequestDTO dto) {

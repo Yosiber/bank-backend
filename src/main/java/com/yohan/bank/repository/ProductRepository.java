@@ -11,4 +11,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     boolean existsByClientIdAndAccountType(Long clientId, AccountType accountType);
     boolean existsByClientId(Long clientId);
     boolean existsByAccountNumber(String fullnumber);
+
+    Long id(Long id);
 }

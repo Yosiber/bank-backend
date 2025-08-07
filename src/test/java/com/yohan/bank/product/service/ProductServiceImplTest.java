@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,9 +43,11 @@ class ProductServiceImplTest {
     private ProductRequestDTO request;
     private ProductResponseDTO response;
     private ProductEntity product;
+    private Long id;
 
     @BeforeEach
     void setUp() {
+        id = 1L;
         product = new ProductEntity();
         product.setId(1L);
         product.setAccountType(AccountType.SAVINGS);
@@ -65,6 +68,46 @@ class ProductServiceImplTest {
         response.setStatus(AccountStatus.ACTIVE);
         response.setIsGmfExempt(false);
     }
+
+    @Test
+    void getAllProducts_shouldReturnListOfProductResponseDTO() {
+        Mockito.when(productRepository.findAll()).thenReturn(List.of(product));
+        Mockito.when(productMapper.toResponseDto(product)).thenReturn(response);
+
+        List<ProductResponseDTO> result = productService.getAllProducts();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(response, result.getFirst());
+
+        Mockito.verify(productRepository).findAll();
+        Mockito.verify(productMapper).toResponseDto(product);
+    }
+
+    @Test
+    void getProductsById_shouldReturnProductResponseDTO_whenProductExists() {
+        Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Mockito.when(productMapper.toResponseDto(product)).thenReturn(response);
+
+        ProductResponseDTO result = productService.getProductsById(1L);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(response, result);
+
+        Mockito.verify(productRepository).findById(1L);
+        Mockito.verify(productMapper).toResponseDto(product);
+    }
+
+    @Test
+    void getProductsById_shouldThrowException_whenProductsNotFound() {
+
+        Mockito.when(productRepository.findById(id)).thenReturn(Optional.empty());
+
+        Assertions.assertThrows(ProductNotFoundException.class, () -> productService.getProductsById(id));
+        Mockito.verify(productRepository).findById(id);
+        Mockito.verifyNoInteractions(productMapper);
+    }
+
 
     @Test
     void createProduct_shouldCreateProductCorrectly() {

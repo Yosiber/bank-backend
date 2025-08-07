@@ -5,10 +5,7 @@ import com.yohan.bank.entity.ProductEntity;
 import com.yohan.bank.entity.TransactionEntity;
 import com.yohan.bank.enums.AccountStatus;
 import com.yohan.bank.enums.TransactionType;
-import com.yohan.bank.exceptions.CannotTransferToSameAccountException;
-import com.yohan.bank.exceptions.InactiveOrCancelledAccountException;
-import com.yohan.bank.exceptions.InsufficientBalanceException;
-import com.yohan.bank.exceptions.ProductNotFoundException;
+import com.yohan.bank.exceptions.*;
 import com.yohan.bank.mapper.TransactionMapper;
 import com.yohan.bank.repository.ProductRepository;
 import com.yohan.bank.repository.TransactionRepository;
@@ -19,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +27,21 @@ public class TransactionServiceImpl implements TransactionService {
     private final ProductRepository productRepository;
 
     private static final BigDecimal GMF_RATE = new BigDecimal("0.004");
+
+    @Override
+    public List<TransactionResponseDTO> getAllTransaction(){
+        List<TransactionEntity> transaction = transactionRepository.findAll();
+        return transaction.stream()
+                .map(transactionMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    public TransactionResponseDTO getTransactionById(Long id){
+        TransactionEntity transactionResponseDTO = transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException(id)) ;
+        return transactionMapper.toResponseDto(transactionResponseDTO);
+    }
 
     @Override
     public TransactionResponseDTO createDepositOrWithdraw(Long accountId, DepositWithdrawRequestDTO request) {

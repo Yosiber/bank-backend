@@ -5,6 +5,7 @@ import com.yohan.bank.controller.ClientController;
 import com.yohan.bank.dto.ClientRequestDTO;
 import com.yohan.bank.dto.ClientResponseDTO;
 import com.yohan.bank.enums.IdentificationType;
+import com.yohan.bank.exceptions.ClientNotFoundException;
 import com.yohan.bank.service.ClientService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +18,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ClientController.class)
 class ClientControllerTest {
@@ -58,6 +59,48 @@ class ClientControllerTest {
         response.setDateOfBirth(LocalDate.of(1990, 1, 1));
         response.setCreatedAt(LocalDateTime.now());
         response.setUpdatedAt(LocalDateTime.now());
+    }
+
+    @Test
+    void getAllClients_shouldReturnGEListOfClients() throws Exception {
+        List<ClientResponseDTO> responseList = List.of(response);
+
+        Mockito.when(clientService.getAllClients()).thenReturn(responseList);
+
+        mockMvc.perform(get("/clients"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(String.valueOf(MediaType.APPLICATION_JSON)))
+                .andExpect(jsonPath("$.size()").value(1))
+                .andExpect(jsonPath("$[0].id").value(response.getId()))
+                .andExpect(jsonPath("$[0].firstName").value(response.getFirstName()));
+
+        Mockito.verify(clientService).getAllClients();
+    }
+
+    @Test
+    void getClientById_shouldReturnClient_whenIdIsValid() throws Exception {
+        Long id = 1L;
+        Mockito.when(clientService.getClientsById(id)).thenReturn(response);
+
+        mockMvc.perform(get("/clients/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(String.valueOf(MediaType.APPLICATION_JSON)))
+                .andExpect(jsonPath("$.id").value(response.getId()))
+                .andExpect(jsonPath("$.firstName").value(response.getFirstName()))
+                .andExpect(jsonPath("$.lastName").value(response.getLastName()));
+
+        Mockito.verify(clientService).getClientsById(id);
+    }
+
+    @Test
+    void getClientById_shouldReturnNotFound_whenClientDoesNotExist() throws Exception {
+        Long id = 1L;
+        Mockito.when(clientService.getClientsById(id)).thenThrow(new ClientNotFoundException(id));
+
+        mockMvc.perform(get("/clients/{id}", id))
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(clientService).getClientsById(id);
     }
 
     @Test

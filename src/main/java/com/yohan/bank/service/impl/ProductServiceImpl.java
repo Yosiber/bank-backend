@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Random;
 
 
@@ -29,6 +30,22 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final Random random = new Random();
 
+
+    @Override
+    public List<ProductResponseDTO> getAllProducts(){
+        List<ProductEntity> products = productRepository.findAll();
+        return products.stream()
+                .map(productMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    public ProductResponseDTO getProductsById(Long id){
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
+        return productMapper.toResponseDto(product);
+    }
 
     @Override
     public ProductResponseDTO createProductForClient(ProductRequestDTO productRequestDTO) {

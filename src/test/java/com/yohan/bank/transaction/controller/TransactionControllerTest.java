@@ -2,10 +2,7 @@ package com.yohan.bank.transaction.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yohan.bank.controller.TransactionController;
-import com.yohan.bank.dto.DepositWithdrawRequestDTO;
-import com.yohan.bank.dto.TransactionResponseDTO;
-import com.yohan.bank.dto.TransactionTransferResponseDTO;
-import com.yohan.bank.dto.TransferRequestDTO;
+import com.yohan.bank.dto.*;
 import com.yohan.bank.enums.TransactionType;
 import com.yohan.bank.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,12 +16,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest(TransactionController.class)
 class TransactionControllerTest {
@@ -79,6 +78,36 @@ class TransactionControllerTest {
                 .build();
 
         transferResponse = new TransactionTransferResponseDTO(debit, credit);
+    }
+
+    @Test
+    void getAllTransactions_shouldReturnListOfTransactions() throws Exception {
+        List<TransactionResponseDTO> transactionList = List.of(transactionResponse);
+
+        Mockito.when(transactionService.getAllTransaction()).thenReturn(transactionList);
+
+        mockMvc.perform(get("/transaction"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].id").value(transactionResponse.getId()))
+                .andExpect(jsonPath("$[0].amount").value(transactionResponse.getAmount()))
+                .andExpect(jsonPath("$[0].transactionType").value(transactionResponse.getTransactionType().toString()))
+                .andExpect(jsonPath("$[0].productId").value(transactionResponse.getProductId()));
+    }
+
+    @Test
+    void getTransactionById_shouldReturnTransaction() throws Exception {
+        Long transactionId = 1L;
+
+        Mockito.when(transactionService.getTransactionById(transactionId)).thenReturn(transactionResponse);
+
+        mockMvc.perform(get("/transaction/{id}", transactionId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(transactionResponse.getId()))
+                .andExpect(jsonPath("$.amount").value(transactionResponse.getAmount()))
+                .andExpect(jsonPath("$.transactionType").value(transactionResponse.getTransactionType().toString()))
+                .andExpect(jsonPath("$.productId").value(transactionResponse.getProductId()));
     }
 
 
