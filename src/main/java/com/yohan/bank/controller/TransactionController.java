@@ -27,7 +27,6 @@ public class TransactionController {
         TransactionResponseDTO transactionResponseDTO = transactionService.getTransactionById(id);
         return ResponseEntity.status(HttpStatus.OK).body(transactionResponseDTO);
     }
-
     @PostMapping("/deposit-withdraw/{accountId}")
     public ResponseEntity<TransactionResponseDTO> createDepositOrWithdraw(
             @PathVariable Long accountId,

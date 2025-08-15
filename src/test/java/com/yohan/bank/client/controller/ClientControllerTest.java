@@ -39,8 +39,11 @@ class ClientControllerTest {
     private ClientRequestDTO request;
     private ClientResponseDTO response;
 
+    private Long id;
+
     @BeforeEach
     void setUp() {
+        id = 1L;
         request = new ClientRequestDTO();
         request.setFirstName("John");
         request.setLastName("Doe");
@@ -94,7 +97,6 @@ class ClientControllerTest {
 
     @Test
     void getClientById_shouldReturnNotFound_whenClientDoesNotExist() throws Exception {
-        Long id = 1L;
         Mockito.when(clientService.getClientsById(id)).thenThrow(new ClientNotFoundException(id));
 
         mockMvc.perform(get("/clients/{id}", id))
@@ -123,12 +125,12 @@ class ClientControllerTest {
     @Test
     void updateClient_shouldReturnNoContent() throws Exception {
         ClientRequestDTO requestDTO = new ClientRequestDTO();
-        request.setFirstName("Updated");
-        request.setLastName("Doe");
-        request.setEmail("updated.doe@example.com");
-        request.setIdentificationNumber("654321");
-        request.setIdentificationType(IdentificationType.CC);
-        request.setDateOfBirth(LocalDate.of(1990, 1, 1));
+        requestDTO.setFirstName("Updated");
+        requestDTO.setLastName("Doe");
+        requestDTO.setEmail("updated.doe@example.com");
+        requestDTO.setIdentificationNumber("654321");
+        requestDTO.setIdentificationType(IdentificationType.CC);
+        requestDTO.setDateOfBirth(LocalDate.of(1990, 1, 1));
 
         mockMvc.perform(put("/clients/update/1")
                         .contentType(String.valueOf(MediaType.APPLICATION_JSON))

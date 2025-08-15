@@ -83,7 +83,7 @@ class ClientServiceImplTest {
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals(responseDTO, result.get(0));
+        Assertions.assertEquals(responseDTO, result.getFirst());
 
         Mockito.verify(clientRepository).findAll();
         Mockito.verify(clientMapper).toResponseDto(client);

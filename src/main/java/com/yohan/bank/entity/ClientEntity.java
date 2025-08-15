@@ -26,7 +26,6 @@ public class ClientEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @NotNull
     @Column(nullable=false)
     @Enumerated(EnumType.STRING)

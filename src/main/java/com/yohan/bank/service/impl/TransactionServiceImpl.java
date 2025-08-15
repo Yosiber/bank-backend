@@ -105,6 +105,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         BigDecimal totalToDeduct = amount.add(gmfAmount);
+
         if (sourceAccount.getBalance().compareTo(totalToDeduct) < 0) {
             throw new InsufficientBalanceException("Saldo insuficiente para cubrir la transferencia y el GMF");
         }
